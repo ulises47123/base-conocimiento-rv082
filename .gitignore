@@ -1,0 +1,7 @@
+# Copias privadas con datos reales del equipo (no se publican)
+_privado_local/
+# Capturas de pantalla de paneles reales
+misaaaa/
+*.PNG
+*.png
+Thumbs.db

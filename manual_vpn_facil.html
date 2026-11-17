@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manual VPN RV082</title>
+<meta name="description" content="Guía sencilla para acceder a tu red de casa desde fuera usando el router Linksys/Cisco RV082 detrás del módem del proveedor.">
+<style>
+  :root{
+    --bg:#f4f5f7; --card:#ffffff; --ink:#1a1d21; --muted:#5b6673;
+    --line:#e2e6ea; --accent:#c0392b; --accent2:#1f6feb;
+    --okbg:#e7f6ec; --okln:#1e7e34; --warnbg:#fff4e0; --warnln:#b26a00;
+    --dangerbg:#fdecea; --dangerln:#c0392b; --code:#eef1f4;
+  }
+  :root:not([data-theme="light"]) @media (prefers-color-scheme: dark){}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0f1216; --card:#171b21; --ink:#e7ebf0; --muted:#9aa6b2;
+      --line:#262c34; --accent:#ff6b5e; --accent2:#5a9bff;
+      --okbg:#13291c; --okln:#4ad17f; --warnbg:#2c2410; --warnln:#f0b64a;
+      --dangerbg:#2c1513; --dangerln:#ff7a6e; --code:#1d232b;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0f1216; --card:#171b21; --ink:#e7ebf0; --muted:#9aa6b2;
+    --line:#262c34; --accent:#ff6b5e; --accent2:#5a9bff;
+    --okbg:#13291c; --okln:#4ad17f; --warnbg:#2c2410; --warnln:#f0b64a;
+    --dangerbg:#2c1513; --dangerln:#ff7a6e; --code:#1d232b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;font-size:16px}
+  .wrap{max-width:860px;margin:0 auto;padding:16px}
+  header.top{padding:26px 16px 10px}
+  h1{font-size:1.7rem;margin:.2em 0}
+  h2{font-size:1.25rem;margin:1.6em 0 .4em;border-bottom:2px solid var(--line);padding-bottom:.25em}
+  h3{font-size:1.05rem;margin:1.2em 0 .3em}
+  .sub{color:var(--muted);margin:.2em 0 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:16px 18px;margin:14px 0;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .step{display:flex;gap:12px;align-items:flex-start;margin:10px 0}
+  .num{flex:0 0 auto;width:28px;height:28px;border-radius:50%;
+    background:var(--accent);color:#fff;font-weight:700;display:flex;
+    align-items:center;justify-content:center;font-size:.9rem;margin-top:2px}
+  code,kbd{background:var(--code);padding:1px 6px;border-radius:5px;
+    font-family:ui-monospace,Consolas,Menlo,monospace;font-size:.92em}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.95rem}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:var(--code)}
+  .note{border-left:4px solid var(--accent2);background:color-mix(in srgb,var(--accent2) 8%,transparent);
+    padding:10px 14px;border-radius:0 8px 8px 0;margin:12px 0}
+  .ok{border-left:4px solid var(--okln);background:var(--okbg);padding:10px 14px;border-radius:0 8px 8px 0;margin:12px 0}
+  .warn{border-left:4px solid var(--warnln);background:var(--warnbg);padding:10px 14px;border-radius:0 8px 8px 0;margin:12px 0}
+  .danger{border-left:4px solid var(--dangerln);background:var(--dangerbg);padding:10px 14px;border-radius:0 8px 8px 0;margin:12px 0}
+  .diagram{font-family:ui-monospace,Consolas,monospace;white-space:pre;overflow-x:auto;
+    background:var(--code);padding:14px;border-radius:10px;font-size:.9rem;color:var(--ink)}
+  .pill{display:inline-block;background:var(--accent);color:#fff;border-radius:20px;
+    padding:2px 12px;font-size:.8rem;font-weight:600;letter-spacing:.3px}
+  ul{padding-left:20px}
+  .toc a{color:var(--accent2);text-decoration:none}
+  .toc a:hover{text-decoration:underline}
+  footer{color:var(--muted);font-size:.85rem;text-align:center;padding:24px 16px}
+  .kbd2{white-space:nowrap}
+  b.hl{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <span class="pill">Manual sencillo</span>
+  <h1>Acceder a mi red de casa desde fuera con el RV082</h1>
+  <p class="sub">Router <b>Linksys/Cisco RV082</b> (firmware 2.0.0.19) detrás del módem del proveedor ("pobre"). Opción elegida: la más simple = <b>PPTP + DMZ</b>.</p>
+</header>
+
+<div class="card toc">
+  <b>Contenido</b>
+  <ul>
+    <li><a href="#idea">0. La idea en un dibujo</a></li>
+    <li><a href="#req">1. Requisito que decide todo: IP pública</a></li>
+    <li><a href="#pobre">2. Pobre: abrirle la puerta al linksys (DMZ)</a></li>
+    <li><a href="#wan">3. Linksys: conectarlo a internet + nombre fijo (DDNS)</a></li>
+    <li><a href="#pptp">4. Linksys: activar la VPN (PPTP) y crear tu usuario</a></li>
+    <li><a href="#fuera">5. Conectarte desde fuera (móvil / PC)</a></li>
+    <li><a href="#fallos">6. Si no funciona</a></li>
+    <li><a href="#seguridad">7. Aviso de seguridad</a></li>
+  </ul>
+</div>
+
+<h2 id="idea">0. La idea en un dibujo</h2>
+<div class="card">
+<div class="diagram">  INTERNET ──►  [ POBRE ]  ──cable──►  [ LINKSYS RV082 ]  ──►  tus equipos
+                (módem ISP)              (la VPN)              (PC, cámaras, NAS...)
+
+  Desde fuera quieres:  TÚ (móvil/PC) ───internet───► entrar a la VPN ───► ver tus equipos</div>
+<p>El problema: lo que llega de internet toca primero a <b>pobre</b>, no al linksys. Hay que decirle a pobre:
+<i>"todo lo que venga de fuera, pásaselo al linksys"</i>. Eso se llama poner el linksys en el <b class="hl">DMZ</b> de pobre. Es el camino más simple.</p>
+</div>
+
+<h2 id="req">1. Requisito que decide todo: ¿tienes IP pública?</h2>
+<div class="card">
+<p>Si tu proveedor te da <b>CGNAT</b> (una IP compartida con otros clientes), <b>nada de esto funcionará</b>, porque no hay una dirección propia a la que llamar desde fuera. Compruébalo antes de perder tiempo:</p>
+<div class="step"><div class="num">1</div><div>Con un PC <b>dentro de tu casa</b>, entra a <code>https://www.whatismyip.com</code> y anota la IP que te muestra (ej. <code>190.x.x.x</code>). Llamémosla <b>IP-internet</b>.</div></div>
+<div class="step"><div class="num">2</div><div>Entra a <b>pobre</b> (ver tabla de claves más abajo) y mira la IP de su puerto <b>WAN / Internet</b>.</div></div>
+<div class="step"><div class="num">3</div><div>Compara:</div></div>
+<table>
+<tr><th>Si la WAN de pobre...</th><th>Significa</th><th>¿Se puede?</th></tr>
+<tr><td>es igual a la IP-internet</td><td>Tienes IP pública real</td><td class="okln"><b>✅ Sí, adelante</b></td></tr>
+<tr><td>empieza por <code>100.64.</code> a <code>100.127.</code></td><td>CGNAT</td><td><b>❌ No. Pide IP pública al ISP</b></td></tr>
+<tr><td>empieza por <code>10.</code> / <code>192.168.</code> / <code>172.16-31.</code></td><td>Hay otro aparato antes</td><td>⚠️ Revisar con el ISP</td></tr>
+</table>
+<div class="note">Tu IP pública puede cambiar sola cada cierto tiempo. Por eso en el paso 3 configuramos un <b>nombre fijo (DDNS)</b>, para no tener que perseguir la IP.</div>
+</div>
+
+<h2 id="pobre">2. Pobre: abrirle la puerta al linksys (DMZ)</h2>
+<div class="card">
+<h3>Entrar a pobre</h3>
+<p>Abre el navegador y prueba <code>192.168.0.1</code>, <code>192.168.100.1</code> o <code>10.0.0.1</code>. Claves más comunes de módems Cisco:</p>
+<table>
+<tr><th>Usuario</th><th>Contraseña</th></tr>
+<tr><td><code>admin</code></td><td><code>password</code></td></tr>
+<tr><td><code>admin</code></td><td><code>admin</code></td></tr>
+<tr><td><code>cisco</code></td><td><code>cisco</code></td></tr>
+<tr><td><code>admin</code></td><td><i>(en blanco)</i></td></tr>
+<tr><td><code>user</code></td><td><code>user</code></td></tr>
+</table>
+<div class="warn">¿No entra ninguna? Muchos Cisco de proveedor traen una <b>clave única impresa en la etiqueta</b>. Si se te borró: busca el <b>modelo</b> (ej. <code>DPC3825</code>) escrito en el aparato y búscalo, <b>resetea pobre</b> (botón 10–15 s con un clip) para volver a fábrica, o <b>llama a tu proveedor</b>.</div>
+
+<h3>Averiguar qué IP tiene el linksys en pobre</h3>
+<p>Dentro de pobre busca <b>"DHCP" / "Dispositivos conectados" / "Attached Devices"</b>. Ahí verás el linksys con una IP tipo <code>192.168.0.x</code>. Anótala: es la <b>IP-del-linksys</b>.</p>
+
+<h3>Poner el linksys en el DMZ de pobre</h3>
+<div class="step"><div class="num">1</div><div>En pobre, busca el menú <b>DMZ</b> (suele estar en <i>Advanced / Firewall / NAT / Gaming</i>).</div></div>
+<div class="step"><div class="num">2</div><div>Activa <b>Enable DMZ</b> y en la casilla de IP pon la <b>IP-del-linksys</b> que anotaste.</div></div>
+<div class="step"><div class="num">3</div><div>Guarda (<b>Save / Apply</b>). Con esto, todo lo que llegue de internet pasa al linksys.</div></div>
+<div class="ok"><b>Consejo:</b> para que el linksys tenga siempre la misma IP en pobre, busca en pobre <b>"DHCP Reservation"</b> y reserva esa IP para la dirección MAC del linksys. Así el DMZ no se "despega".</div>
+<div class="note">¿Tu pobre no tiene DMZ? Entonces usa <b>Port Forwarding</b> en pobre y reenvía hacia la IP-del-linksys: <b>TCP 1723</b> y el protocolo <b>GRE (47)</b>. Si pobre no deja reenviar "GRE", el DMZ es la única vía — o pídele a tu ISP poner pobre en <b>modo puente (bridge)</b>.</div>
+</div>
+
+<h2 id="wan">3. Linksys: conectarlo a internet + nombre fijo (DDNS)</h2>
+<div class="card">
+<p>Entra al linksys: <code>http://192.168.1.1</code> — con tu usuario y contraseña (de fábrica: <code>admin</code> / <code>admin</code>).</p>
+<div class="danger"><b>Primero de todo: cambia la contraseña.</b> <b>Setup → Password</b>. Dejar <code>admin/admin</code> en un equipo accesible desde fuera es peligroso.</div>
+<div class="step"><div class="num">1</div><div><b>Conecta el cable</b> de pobre al puerto <b>WAN1 / Internet</b> del linksys (el de arriba, no uno de los 8 LAN).</div></div>
+<div class="step"><div class="num">2</div><div>En <b>System Summary</b>, mira que <b>WAN1 IP</b> ya <b>no sea</b> <code>0.0.0.0</code>. Si sigue en 0.0.0.0, revisa el cable y que pobre dé DHCP.</div></div>
+<div class="step"><div class="num">3</div><div><b>Setup → Dynamic DNS</b>: crea una cuenta gratis en un servicio DDNS (ej. DynDNS/No-IP), elige un nombre tipo <code>micasa.ejemplo.net</code> y rellénalo aquí. Guarda. Ese nombre será tu "dirección fija" para conectarte desde fuera.</div></div>
+</div>
+
+<h2 id="pptp">4. Linksys: activar la VPN (PPTP) y crear tu usuario</h2>
+<div class="card">
+<p>PPTP es la opción <b>más simple</b>: no hay que instalar nada en el móvil/PC viejo, ya viene de serie.</p>
+<div class="step"><div class="num">1</div><div>Ve a <b>VPN → PPTP Server</b>.</div></div>
+<div class="step"><div class="num">2</div><div>Marca <b>Enable PPTP Server</b>.</div></div>
+<div class="step"><div class="num">3</div><div><b>IP Address Range</b>: déjalo en <code>192.168.1.200</code> – <code>192.168.1.204</code> (son las IP que recibirán los que entren; están fuera del DHCP, perfecto).</div></div>
+<div class="step"><div class="num">4</div><div>Crea tu usuario: escribe <b>Username</b> y <b>New Password</b> → <b>Add to list</b>. (Máximo 5 usuarios conectados a la vez.)</div></div>
+<div class="step"><div class="num">5</div><div>Pulsa <b>Save</b>.</div></div>
+<div class="ok">No hay que tocar nada más en el linksys: PPTP ya está escuchando y el DMZ de pobre deja pasar la conexión.</div>
+</div>
+
+<h2 id="fuera">5. Conectarte desde fuera (móvil / PC)</h2>
+<div class="card">
+<h3>Windows 10 / 11</h3>
+<div class="step"><div class="num">1</div><div><b>Configuración → Red e Internet → VPN → Agregar VPN.</b></div></div>
+<div class="step"><div class="num">2</div><div>Proveedor: <b>Windows (integrado)</b>. Nombre: el que quieras.</div></div>
+<div class="step"><div class="num">3</div><div><b>Nombre o dirección del servidor</b>: tu nombre DDNS (<code>micasa.ejemplo.net</code>) o tu IP pública.</div></div>
+<div class="step"><div class="num">4</div><div><b>Tipo de VPN</b>: <b>PPTP</b>. Usuario y contraseña: los que creaste en el paso 4.</div></div>
+<div class="step"><div class="num">5</div><div>Guardar → <b>Conectar</b>. Con 4G/otra wifi (no tu propia casa), para probar de verdad.</div></div>
+<h3>Android (versiones antiguas)</h3>
+<p><b>Ajustes → Conexiones → Más → VPN → Añadir</b>: Tipo <b>PPTP</b>, Servidor = tu DDNS, usuario y clave.</p>
+<div class="warn"><b>iPhone y Android recientes (12+) ya NO traen PPTP.</b> Para esos equipos habría que usar la opción más segura (IPsec con Shrew/TheGreenBow). Si lo necesitas, pídemelo y te hago ese manual.</div>
+<div class="ok">Ya conectado: podrás acceder a tus equipos por su IP de casa (<code>192.168.1.x</code>), como si estuvieras ahí.</div>
+</div>
+
+<h2 id="fallos">6. Si no funciona</h2>
+<div class="card">
+<table>
+<tr><th>Síntoma</th><th>Causa probable → solución</th></tr>
+<tr><td>WAN del linksys = 0.0.0.0</td><td>Cable mal o pobre no da DHCP. Revisa el cable al puerto WAN1 y reinicia ambos.</td></tr>
+<tr><td>Conecta en casa pero no desde fuera</td><td>Falta el DMZ en pobre, o tienes <b>CGNAT</b> (paso 1). Revisa ambos.</td></tr>
+<tr><td>Error 619 / 806 / "GRE"</td><td>Pobre no deja pasar GRE(47). Usa <b>DMZ</b> en vez de reenvío de puertos, o pide <b>bridge</b> al ISP. Algunas redes móviles bloquean GRE: prueba otra.</td></tr>
+<tr><td>Error 691 (usuario/clave)</td><td>Usuario o contraseña del <b>PPTP Server</b> mal escritos.</td></tr>
+<tr><td>Conecta pero no "ves" tus equipos</td><td>Tus equipos y los clientes PPTP deben estar en redes <b>distintas</b>. Si tu casa es 192.168.1.x va bien (los clientes caen en .200–.204).</td></tr>
+</table>
+</div>
+
+<h2 id="seguridad">7. Aviso de seguridad (importante)</h2>
+<div class="danger">
+<ul>
+<li><b>PPTP es antiguo e inseguro</b> (su cifrado se considera roto). Es el más fácil, pero no lo uses para cosas muy sensibles. La alternativa segura es <b>IPsec</b> (más pasos en el cliente).</li>
+<li>El <b>RV082 está fuera de soporte</b> desde 2021 y tiene fallos sin parche. Si lo expones a internet: <b>cambia admin/admin</b>, apaga <b>Remote Management</b>, apaga <b>SNMP</b> y <b>UPnP</b>.</li>
+<li>Poner el linksys en <b>DMZ</b> de pobre hace que el linksys reciba todo internet — por eso es vital que su contraseña sea fuerte y el firewall esté activo.</li>
+</ul>
+</div>
+
+<footer>
+Manual generado para el equipo RV082 (serial <NUMERO_DE_SERIE>, firmware 2.0.0.19-tm). Guarda este archivo junto al resto de la base de conocimiento para consultarlo sin internet.
+</footer>
+</div>
+</body>
+</html>
